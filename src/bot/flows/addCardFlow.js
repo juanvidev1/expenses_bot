@@ -99,5 +99,6 @@ export const addCardFlow = async (ctx) => {
       `Tarjeta con número **** **** **** ${card.card_number} agregada exitosamente!`,
       Markup.removeKeyboard(),
     );
+    return;
   });
 };

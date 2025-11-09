@@ -6,6 +6,7 @@ import { startWebServer } from './web/app/server.js';
 import { addExpense } from './bot/flows/addExpenseFlow.js';
 import { ExpenseHandler } from './bot/handlers/expenseHandler.js';
 import { addCardFlow } from './bot/flows/addCardFlow.js';
+import { CardHandler } from './bot/handlers/cardHandler.js';
 import './database/models/User.js';
 import dotenv from 'dotenv';
 
@@ -48,6 +49,10 @@ registerBotCommands('consultar_gastos', async (ctx) => {
 
 registerBotCommands('agregar_tarjeta', async (ctx) => {
   addCardFlow(ctx);
+});
+
+registerBotCommands('consultar_tarjetas', async (ctx) => {
+  CardHandler.listUserCards(ctx);
 });
 
 function helloCommand() {

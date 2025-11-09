@@ -8,7 +8,7 @@ const ExpenseModel = sequelize.define('Expense', {
     primaryKey: true,
   },
   userId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.BIGINT,
     allowNull: false,
     references: {
       model: 'Users',
@@ -40,14 +40,14 @@ const ExpenseModel = sequelize.define('Expense', {
   number_of_installments: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    references: {
-      model: 'Cards',
-      key: 'id',
-    },
   },
   associated_card: {
     type: DataTypes.INTEGER,
     allowNull: true,
+    references: {
+      model: 'Cards',
+      key: 'id',
+    },
   },
   installment_value: {
     type: DataTypes.DECIMAL(10, 2),

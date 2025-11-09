@@ -2,10 +2,12 @@ import { Markup } from 'telegraf';
 import { bot } from '../../index.js';
 import { ExpenseHandler } from '../handlers/expenseHandler.js';
 import { UserHandler } from '../handlers/userHandler.js';
+import { CardHandler } from '../handlers/cardHandler.js';
 import {
   formatCurrency,
   calculateCreditCardInstalments,
 } from '../../utils/index.js';
+import { inlineKeyboard } from 'telegraf/markup';
 
 const userSteps = new Map();
 
@@ -93,8 +95,31 @@ const addExpense = async (ctx) => {
         }
         userStep.expenseData.paymentMethod = paymentMethod;
         if (paymentMethod.toLowerCase().includes('tarjeta')) {
-          userStep.step = 5;
-          await ctx.reply('¿A cuántas cuotas diferiste el pago?');
+          // userStep.step = 5;
+          // await ctx.reply('¿A cuántas cuotas diferiste el pago?');
+          // return;
+          const userCards = await CardHandler.listUserCards(ctx);
+          if (userCards.length === 0) {
+            await ctx.reply(
+              'No tienes tarjetas registradas. Por favor, registra una tarjeta primero.',
+              Markup.removeKeyboard(),
+            );
+            userSteps.delete(telegramId);
+            return;
+          }
+          await ctx.reply(
+            '💳 Selecciona una tarjeta:',
+            Markup.inlineKeyboard([
+              ...userCards.map((card) => [
+                {
+                  text: `💳 ${card.card_number} (${card.card_type})`,
+                  callback_data: `select_card_${card.id}`,
+                },
+              ]),
+              [{ text: '❌ Cancelar', callback_data: 'cancel' }],
+            ]),
+          );
+          userStep.step = 9;
           return;
         }
         userStep.step = 8;
@@ -119,8 +144,6 @@ const addExpense = async (ctx) => {
 
         userStep.expenseData.date = date;
 
-        console.log('Datos del gasto a registrar:', userStep.expenseData);
-
         const dataToSave = {
           userId: telegramId,
           amount: userStep.expenseData.amount,
@@ -128,12 +151,14 @@ const addExpense = async (ctx) => {
           payment_method: userStep.expenseData.paymentMethod,
           number_of_installments:
             userStep.expenseData.numberOfInstallments || null,
-          payment_day: userStep.expenseData.paymentDay || null,
+          associated_card: userStep.expenseData.associatedCard || null,
           installment_value: userStep.expenseData.installmentValue || null,
           is_paid: userStep.expenseData.isPaid || false,
           description: userStep.expenseData.description || null,
           date: userStep.expenseData.date || null,
         };
+
+        console.log('Datos del gasto a registrar:', dataToSave);
 
         const registeredExpense = await ExpenseHandler.addExpense(
           ctx,
@@ -173,7 +198,7 @@ const addExpense = async (ctx) => {
         );
         break;
 
-      case 6:
+      case 6: // Solicita una descripción del gasto.
         const paymentDayInput = ctx.message.text.trim();
         const paymentDay = new Date(paymentDayInput);
         if (isNaN(paymentDay.getTime())) {
@@ -197,29 +222,32 @@ const addExpense = async (ctx) => {
         );
         break;
 
-      case 7:
+      case 7: // Confirma descripción y dirige al paso final (solicitud de fecha) en el case 4
         const description = ctx.message.text.trim();
         userStep.expenseData.description = description;
-        ctx.reply(
-          'Descripción guardada. Ahora, por favor ingresa la fecha del gasto (formato YYYY-MM-DD).',
+        userStep.step = 8;
+        await ctx.reply(
+          '¿El gasto está pagado?',
+          Markup.keyboard([['Sí'], ['No'], ['Cancelar']])
+            .oneTime()
+            .resize(),
         );
-        userStep.step = 4;
         break;
 
-      case 8:
+      case 8: // Confirma si el gasto está pagado y pasa al paso final (validación de fecha) en el case 4
         console.log('Respuesta de pago:', ctx.message.text);
         const respuesta = ctx.message.text;
         if (respuesta === 'Sí') {
           userStep.expenseData.isPaid = true;
-          userStep.step = 7;
+          userStep.step = 4;
           await ctx.reply(
-            'Por favor, ingresa una fecha en formato YYYY-MM-DD.',
+            'Por favor, ingresa la fecha del gasto en formato YYYY-MM-DD.',
           );
         } else if (respuesta === 'No') {
           userStep.expenseData.isPaid = false;
-          userStep.step = 7;
+          userStep.step = 4;
           await ctx.reply(
-            'Por favor, ingresa una fecha en formato YYYY-MM-DD.',
+            'Por favor, ingresa la fecha del gasto en formato YYYY-MM-DD.',
           );
         } else {
           userSteps.delete(telegramId);
@@ -227,11 +255,60 @@ const addExpense = async (ctx) => {
         }
         break;
 
+      case 9: // Esperando selección de tarjeta
+        // Los actions se manejan fuera del flujo de mensajes
+        break;
+
       default:
         await ctx.reply('Ha ocurrido un error. Por favor, intenta de nuevo.');
         userSteps.delete(telegramId);
         break;
     }
+  });
+
+  // Manejar selección de tarjetas
+  bot.action(/^select_card_(\d+)$/, async (ctx) => {
+    const telegramId = ctx.from?.id;
+    if (!telegramId || !userSteps.has(telegramId)) {
+      return;
+    }
+
+    const userStep = userSteps.get(telegramId);
+    const cardId = ctx.match[1];
+    const card = await CardHandler.getCardById(cardId);
+
+    if (!card) {
+      await ctx.reply('Tarjeta no encontrada.');
+      return;
+    }
+
+    userStep.expenseData.associatedCard = card.get('id');
+
+    if (card.get('card_type').toLowerCase() === 'crédito') {
+      await ctx.reply(
+        '¿A cuántas cuotas diferiste el pago? (Ingresa un número)',
+      );
+      userStep.step = 5;
+    } else {
+      await ctx.reply(
+        '¿El gasto está pagado?',
+        Markup.keyboard([['Sí'], ['No'], ['Cancelar']])
+          .oneTime()
+          .resize(),
+      );
+      userStep.step = 8;
+    }
+
+    await ctx.answerCbQuery();
+  });
+
+  bot.action('cancel', async (ctx) => {
+    const telegramId = ctx.from?.id;
+    if (telegramId && userSteps.has(telegramId)) {
+      userSteps.delete(telegramId);
+      await ctx.reply('❌ Operación cancelada.', Markup.removeKeyboard());
+    }
+    await ctx.answerCbQuery();
   });
 };
 

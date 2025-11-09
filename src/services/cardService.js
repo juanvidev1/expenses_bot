@@ -26,6 +26,16 @@ export class CardService {
     }
   }
 
+  static async getCardById(id) {
+    try {
+      const card = await CardModel.findByPk(id);
+      return card;
+    } catch (error) {
+      console.error('Error fetching card by ID:', error);
+      throw error;
+    }
+  }
+
   static async updateCard(id, card) {
     try {
       const updatedCard = await CardModel.findByIdAndUpdate(id, card, {
