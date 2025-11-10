@@ -63,6 +63,10 @@ const ExpenseModel = sequelize.define('Expense', {
     allowNull: false,
     defaultValue: false,
   },
+  market_place: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   description: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -72,11 +76,6 @@ const ExpenseModel = sequelize.define('Expense', {
     allowNull: false,
     defaultValue: DataTypes.NOW,
   },
-});
-
-ExpenseModel.belongsTo(CardModel, {
-  foreignKey: 'associated_card',
-  as: 'card',
 });
 
 export { ExpenseModel };

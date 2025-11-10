@@ -1,5 +1,6 @@
 import { sequelize } from '../config/database.js';
 import { DataTypes } from 'sequelize';
+import { ExpenseModel } from './Expense.js';
 
 export const CardModel = sequelize.define('Card', {
   id: {
@@ -45,5 +46,3 @@ export const CardModel = sequelize.define('Card', {
     allowNull: true,
   },
 });
-
-// Association will be defined in the main database setup

@@ -7,6 +7,8 @@ import { addExpense } from './bot/flows/addExpenseFlow.js';
 import { ExpenseHandler } from './bot/handlers/expenseHandler.js';
 import { addCardFlow } from './bot/flows/addCardFlow.js';
 import { CardHandler } from './bot/handlers/cardHandler.js';
+import { invoiceImgDataFlow } from './bot/flows/invoiceImgDataFlow.js';
+import { checkOpenRouterAccount } from './services/aiService.js';
 import './database/models/User.js';
 import dotenv from 'dotenv';
 
@@ -21,14 +23,28 @@ bot.start((ctx) => {
 });
 
 bot.help((ctx) => {
-  ctx.reply('Comandos básicos:\n/start\n/help\n\n [Documentación completa](https://gastos.juanvidev.com/)', {
-    parse_mode: 'MarkdownV2',
-  });
+  ctx.reply(
+    'Comandos básicos:\n/start\n/help\n\n [Documentación completa](https://gastos.juanvidev.com/)',
+    {
+      parse_mode: 'MarkdownV2',
+    },
+  );
 });
 
 registerBotCommands('hello', (ctx) => {
   const message = helloCommand();
   ctx.reply(message);
+});
+
+registerBotCommands('check_models', async (ctx) => {
+  const data = await checkOpenRouterAccount();
+  ctx.reply(
+    'Revisa la consola para ver los modelos disponibles y límites de cuenta.',
+  );
+});
+
+registerBotCommands('procesar_factura', (ctx) => {
+  invoiceImgDataFlow(ctx);
 });
 
 registerBotCommands('registrarse', async (ctx) => {

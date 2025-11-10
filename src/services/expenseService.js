@@ -22,10 +22,16 @@ const findExpenseById = async (id) => {
 
 const findExpensesByUserId = async (userId) => {
   try {
-    return await ExpenseModel.findAll({
+    const expenses = await ExpenseModel.findAll({
       where: { userId },
-      include: { model: CardModel, as: 'card' },
     });
+    const expensesWithCards = expenses.map(async (expense) => {
+      const card = await CardModel.findOne({
+        where: { id: expense.associated_card },
+      });
+      return Promise.resolve({ ...expense.toJSON(), card });
+    });
+    return Promise.all(expensesWithCards);
   } catch (error) {
     console.error('Error fetching expenses by user ID:', error);
     throw error;
