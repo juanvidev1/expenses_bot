@@ -1,11 +1,11 @@
 import {
   createExpense,
   findExpensesByUserId,
-} from '../../services/expenseService.js';
+} from '#services/expenseService.js';
 import { calculateTotal, formatCurrency } from '../../utils/index.js';
 
 class ExpenseHandler {
-  static async addExpense(ctx, expenseData) {
+  static async addExpense(expenseData) {
     const expense = await createExpense(expenseData);
     return expense;
   }
@@ -14,9 +14,22 @@ class ExpenseHandler {
     const userExpenses = await findExpensesByUserId(ctx.from?.id);
     if (userExpenses.length > 0) {
       const expensesList = userExpenses.map((expense) => {
+        const formattedDate = expense.get('date')
+          ? expense.get('date').toLocaleDateString()
+          : 'N/A';
+        let newDt = new Date(expense.get('date'));
+        newDt = `${
+          newDt.getDate() > 10 ? newDt.getDate() : '0' + newDt.getDate()
+        }/${
+          newDt.getMonth() + 1 > 10
+            ? newDt.getMonth() + 1
+            : '0' + (newDt.getMonth() + 1)
+        }/${newDt.getFullYear()}`;
         return `🆔: ${expense.get('id')}, 💵 Monto: ${formatCurrency(
           expense.get('amount'),
-        )}, 🏷️ Categoría: ${expense.get('category')}`;
+        )}, 💰 Valor con TC: ${formatCurrency(
+          expense.get('credit_total_value'),
+        )}, 📆 Fecha: ${newDt}, 🏷️ Categoría: ${expense.get('category')}`;
       });
       const total = calculateTotal(
         userExpenses.map((expense) => expense.get('amount')),
@@ -30,6 +43,11 @@ class ExpenseHandler {
     } else {
       ctx.reply('📋 No tienes gastos registrados.');
     }
+  }
+
+  static async getExpensesByUserId(userId) {
+    const expenses = await findExpensesByUserId(userId);
+    return expenses;
   }
 }
 

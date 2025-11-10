@@ -45,3 +45,5 @@ export const CardModel = sequelize.define('Card', {
     allowNull: true,
   },
 });
+
+// Association will be defined in the main database setup

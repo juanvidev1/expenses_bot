@@ -1,3 +1,4 @@
+import { CardModel } from '#src/database/models/Card.js';
 import { ExpenseModel } from '../database/models/Expense.js';
 
 const createExpense = async (expenseData) => {
@@ -21,7 +22,10 @@ const findExpenseById = async (id) => {
 
 const findExpensesByUserId = async (userId) => {
   try {
-    return await ExpenseModel.findAll({ where: { userId } });
+    return await ExpenseModel.findAll({
+      where: { userId },
+      include: { model: CardModel, as: 'card' },
+    });
   } catch (error) {
     console.error('Error fetching expenses by user ID:', error);
     throw error;

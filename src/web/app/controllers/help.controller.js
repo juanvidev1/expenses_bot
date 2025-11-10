@@ -14,12 +14,9 @@ class HelpController {
         command: '/consultar_gastos',
         description: 'Consultar gastos registrados',
       },
-      {
-        command: 'OPEN_ROUTER_TOKEN',
-        description:
-          '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',
-      },
+      { command: '/agregar_tarjeta', description: 'Agregar una nueva tarjeta' },
     ];
+
     res.json(commands);
   };
 }

@@ -3,14 +3,16 @@ import path from 'path';
 import { router } from './routes.js';
 
 const app = express();
-const PORT = process.env.PORT || 3050;
+const PORT = process.env.PORT || 3051;
 
 // Ruta absoluta hardcodeada para evitar problemas
-const publicPath = '/Users/juanvicentereyes/Documents/expenses_bot/src/web/public';
+const publicPath =
+  '/Users/juanvicentereyes/Documents/expenses_bot/src/web/public';
 
 console.log('Usando publicPath:', publicPath);
 
 app.use(express.static(publicPath));
+app.use(express.json());
 
 app.get('/', (req, res) => {
   const indexPath = path.join(publicPath, 'index.html');

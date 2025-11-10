@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../config/database.js';
+import { CardModel } from './Card.js';
 
 const ExpenseModel = sequelize.define('Expense', {
   id: {
@@ -53,6 +54,10 @@ const ExpenseModel = sequelize.define('Expense', {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: true,
   },
+  credit_total_value: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+  },
   is_paid: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
@@ -67,6 +72,11 @@ const ExpenseModel = sequelize.define('Expense', {
     allowNull: false,
     defaultValue: DataTypes.NOW,
   },
+});
+
+ExpenseModel.belongsTo(CardModel, {
+  foreignKey: 'associated_card',
+  as: 'card',
 });
 
 export { ExpenseModel };

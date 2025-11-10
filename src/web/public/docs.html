@@ -11,10 +11,11 @@
     <a href="/index.html">Inicio</a>
     <div id="commands"></div>
 
-    <script V="1.0.0">
+    <script V="1.1.0">
       fetch('/api/commands')
         .then((response) => response.json())
         .then((commands) => {
+          console.log(commands);
           const container = document.getElementById('commands');
           commands.forEach((cmd) => {
             const div = document.createElement('div');

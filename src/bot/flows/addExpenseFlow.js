@@ -95,9 +95,6 @@ const addExpense = async (ctx) => {
         }
         userStep.expenseData.paymentMethod = paymentMethod;
         if (paymentMethod.toLowerCase().includes('tarjeta')) {
-          // userStep.step = 5;
-          // await ctx.reply('¿A cuántas cuotas diferiste el pago?');
-          // return;
           const userCards = await CardHandler.listUserCards(ctx);
           if (userCards.length === 0) {
             await ctx.reply(
@@ -153,6 +150,7 @@ const addExpense = async (ctx) => {
             userStep.expenseData.numberOfInstallments || null,
           associated_card: userStep.expenseData.associatedCard || null,
           installment_value: userStep.expenseData.installmentValue || null,
+          credit_total_value: userStep.expenseData.creditTotalValue || null,
           is_paid: userStep.expenseData.isPaid || false,
           description: userStep.expenseData.description || null,
           date: userStep.expenseData.date || null,
@@ -160,16 +158,15 @@ const addExpense = async (ctx) => {
 
         console.log('Datos del gasto a registrar:', dataToSave);
 
-        const registeredExpense = await ExpenseHandler.addExpense(
-          ctx,
-          dataToSave,
-        );
+        const registeredExpense = await ExpenseHandler.addExpense(dataToSave);
         console.log(registeredExpense.dataValues);
         const resData = registeredExpense.dataValues;
 
         await ctx.reply(
           `✅ Gasto agregado:\n💵 Monto: ${formatCurrency(
             resData.amount,
+          )}\nValor con tarjeta: ${formatCurrency(
+            resData.credit_total_value,
           )}\n🏷️ Categoría: ${
             resData.category
           }\n📅 Fecha: ${resData.date.toLocaleDateString(
@@ -214,6 +211,8 @@ const addExpense = async (ctx) => {
           0.243, // Suponiendo una tasa de interés anual del 24.3%, se expresa como decimal o sea 0.243
         );
         userStep.expenseData.installmentValue = installmentValue;
+        userStep.expenseData.creditTotalValue =
+          installmentValue * userStep.expenseData.numberOfInstallments;
         userStep.step = 7;
         await ctx.reply(
           `El valor de cada cuota es: ${formatCurrency(

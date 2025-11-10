@@ -3,8 +3,10 @@ import { Markup } from 'telegraf';
 import { CardHandler } from '../handlers/cardHandler.js';
 
 const cardTypes = ['Crédito', 'Débito'];
+const cardSteps = new Map();
 
 export const addCardFlow = async (ctx) => {
+  cardSteps.set(ctx.from?.id, 'start');
   const telegramId = ctx.from?.id;
   if (!telegramId) {
     ctx.reply('No se pudo obtener tu ID de Telegram.');
@@ -23,6 +25,7 @@ export const addCardFlow = async (ctx) => {
       .oneTime()
       .resize(),
   );
+  cardSteps.set(telegramId, 'awaiting_card_info');
 
   bot.on('message', async (ctx) => {
     const telegramId = ctx.from?.id;
@@ -39,66 +42,73 @@ export const addCardFlow = async (ctx) => {
       return;
     }
 
-    const cardData = ctx.message.text.trim().split('\n');
-    const cardNumber = cardData[0];
-    const cardType = cardData[1];
-    const cutOffDay = cardData[2];
-    const paymentDay = cardData[3];
+    const currentStep = cardSteps.get(telegramId);
 
-    if (isNaN(parseInt(cardNumber)) || cardNumber.length !== 4) {
+    if (currentStep === 'awaiting_card_info') {
+      const cardData = ctx.message.text.trim().split('\n');
+      const cardNumber = cardData[0];
+      const cardType = cardData[1];
+      const cutOffDay = cardData[2];
+      const paymentDay = cardData[3];
+
+      if (isNaN(parseInt(cardNumber)) || cardNumber.length !== 4) {
+        await ctx.reply(
+          'Por favor, ingresa un número de tarjeta válido (4 últimos dígitos).',
+        );
+        return;
+      }
+
+      if (!cardTypes.includes(cardType)) {
+        await ctx.reply(
+          'Por favor, ingresa un tipo de tarjeta válido (Crédito o Débito).',
+        );
+        return;
+      }
+
+      if (
+        cutOffDay &&
+        (isNaN(parseInt(cutOffDay)) ||
+          parseInt(cutOffDay) < 1 ||
+          parseInt(cutOffDay) > 31)
+      ) {
+        await ctx.reply(
+          'Por favor, ingresa un día de corte válido (número entre 1 y 31) o déjalo vacío.',
+        );
+        return;
+      }
+
+      if (
+        paymentDay &&
+        (isNaN(parseInt(paymentDay)) ||
+          parseInt(paymentDay) < 1 ||
+          parseInt(paymentDay) > 31)
+      ) {
+        await ctx.reply(
+          'Por favor, ingresa un día de pago válido (número entre 1 y 31) o déjalo vacío.',
+        );
+        return;
+      }
+
+      const cardInfo = {
+        userId: telegramId,
+        card_number: `**** **** **** ${cardNumber}`,
+        card_type: cardType.toLowerCase(),
+        card_holder_name:
+          ctx.from?.first_name + ' ' + ctx.from?.last_name || 'N/A',
+        cutoff_day: cutOffDay ? parseInt(cutOffDay) : null,
+        payment_day: paymentDay ? parseInt(paymentDay) : null,
+      };
+
+      const card = await CardHandler.addCard(cardInfo);
+      cardSteps.delete(telegramId);
+
       await ctx.reply(
-        'Por favor, ingresa un número de tarjeta válido (4 últimos dígitos).',
+        `Tarjeta con número **** **** **** ${card.card_number} agregada exitosamente!`,
+        Markup.removeKeyboard(),
       );
       return;
-    }
-
-    if (!cardTypes.includes(cardType)) {
-      await ctx.reply(
-        'Por favor, ingresa un tipo de tarjeta válido (Crédito o Débito).',
-      );
+    } else {
       return;
     }
-
-    if (
-      cutOffDay &&
-      (isNaN(parseInt(cutOffDay)) ||
-        parseInt(cutOffDay) < 1 ||
-        parseInt(cutOffDay) > 31)
-    ) {
-      await ctx.reply(
-        'Por favor, ingresa un día de corte válido (número entre 1 y 31) o déjalo vacío.',
-      );
-      return;
-    }
-
-    if (
-      paymentDay &&
-      (isNaN(parseInt(paymentDay)) ||
-        parseInt(paymentDay) < 1 ||
-        parseInt(paymentDay) > 31)
-    ) {
-      await ctx.reply(
-        'Por favor, ingresa un día de pago válido (número entre 1 y 31) o déjalo vacío.',
-      );
-      return;
-    }
-
-    const cardInfo = {
-      userId: telegramId,
-      card_number: `**** **** **** ${cardNumber}`,
-      card_type: cardType.toLowerCase(),
-      card_holder_name:
-        ctx.from?.first_name + ' ' + ctx.from?.last_name || 'N/A',
-      cutoff_day: cutOffDay ? parseInt(cutOffDay) : null,
-      payment_day: paymentDay ? parseInt(paymentDay) : null,
-    };
-
-    const card = await CardHandler.addCard(cardInfo);
-
-    await ctx.reply(
-      `Tarjeta con número **** **** **** ${card.card_number} agregada exitosamente!`,
-      Markup.removeKeyboard(),
-    );
-    return;
   });
 };
