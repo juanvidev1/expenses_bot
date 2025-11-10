@@ -21,9 +21,9 @@ bot.start((ctx) => {
 });
 
 bot.help((ctx) => {
-  ctx.reply(
-    'Comandos disponibles:\n/start - Iniciar el bot\n/help - Mostrar ayuda\n\n📖 Documentación completa: http://localhost:3050',
-  );
+  ctx.reply('[Documentación completa](http://localhost:3050)', {
+    parse_mode: 'MarkdownV2',
+  });
 });
 
 registerBotCommands('hello', (ctx) => {

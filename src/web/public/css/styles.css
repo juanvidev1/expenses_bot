@@ -4,17 +4,51 @@ body {
   margin: 0 auto;
   padding: 20px;
 }
+/* Implement a dark mode */
+body.dark-mode {
+  background-color: #121212;
+  color: #e0e0e0;
+}
+/* Style for command sections */
 .command {
   background: #f5f5f5;
   padding: 15px;
   margin: 10px 0;
   border-radius: 5px;
 }
+.command.dark-mode {
+  background: #1e1e1e;
+}
 .command-name {
   font-weight: bold;
   color: #0066cc;
 }
+.command-name.dark-mode {
+  color: #3399ff;
+}
 h1 {
   color: #333;
   text-align: center;
+}
+h1.dark-mode {
+  color: #ffffff;
+}
+a {
+  color: #0066cc;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+a.dark-mode {
+  color: #3399ff;
+}
+a.dark-mode:hover {
+  text-decoration: underline;
+}
+a:visited {
+  color: #551a8b;
+}
+a.dark-mode:visited {
+  color: #5af5ce;
 }

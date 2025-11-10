@@ -9,4 +9,8 @@ const findUserByTelegramId = async (telegramId) => {
   return await UserModel.findOne({ where: { telegramId } });
 };
 
-export { createUser, findUserByTelegramId };
+const updateUser = async (telegramId, updateData) => {
+  return await UserModel.update(updateData, { where: { telegramId } });
+};
+
+export { createUser, findUserByTelegramId, updateUser };

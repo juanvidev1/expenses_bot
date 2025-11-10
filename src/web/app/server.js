@@ -3,11 +3,13 @@ import path from 'path';
 import { router } from './routes.js';
 
 const app = express();
-const PORT = process.env.PORT || 3051;
+const PORT = process.env.PORT || 3050;
+const isLinux = process.env.IS_LINUX || true;
 
 // Ruta absoluta hardcodeada para evitar problemas
-const publicPath =
-  '/Users/juanvicentereyes/Documents/expenses_bot/src/web/public';
+const publicPath = isLinux
+  ? '/home/juanvidev1/Documentos/expenses_bot/src/web/public'
+  : '/Users/juanvicentereyes/Documents/expenses_bot/src/web/public';
 
 console.log('Usando publicPath:', publicPath);
 
