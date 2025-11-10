@@ -4,7 +4,7 @@ import { router } from './routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3050;
-const isLinux = process.env.IS_LINUX || true;
+const isLinux = process.env.IS_LINUX === true ? true : false;
 
 // Ruta absoluta hardcodeada para evitar problemas
 const publicPath = isLinux
@@ -26,6 +26,7 @@ app.use('/api', router);
 
 const startWebServer = () => {
   app.listen(PORT, () => {
+    console.log('isLinux:', isLinux);
     console.log(`Servidor web ejecutándose en http://localhost:${PORT}`);
     console.log(`Archivos estáticos desde: ${publicPath}`);
   });
