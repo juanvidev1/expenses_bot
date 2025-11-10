@@ -2,7 +2,7 @@ import {
   createExpense,
   findExpensesByUserId,
 } from '#services/expenseService.js';
-import { calculateTotal, formatCurrency } from '../../utils/index.js';
+import { calculateTotal, formatCurrency } from '#utils/index.js';
 
 class ExpenseHandler {
   static async addExpense(expenseData) {
@@ -12,12 +12,13 @@ class ExpenseHandler {
 
   static async consultExpenses(ctx) {
     const userExpenses = await findExpensesByUserId(ctx.from?.id);
+    // console.log('userExpenses:', userExpenses);
     if (userExpenses.length > 0) {
       const expensesList = userExpenses.map((expense) => {
-        const formattedDate = expense.get('date')
-          ? expense.get('date').toLocaleDateString()
+        const formattedDate = expense.date
+          ? expense.date.toLocaleDateString()
           : 'N/A';
-        let newDt = new Date(expense.get('date'));
+        let newDt = new Date(expense.date);
         newDt = `${
           newDt.getDate() > 10 ? newDt.getDate() : '0' + newDt.getDate()
         }/${
@@ -25,14 +26,18 @@ class ExpenseHandler {
             ? newDt.getMonth() + 1
             : '0' + (newDt.getMonth() + 1)
         }/${newDt.getFullYear()}`;
-        return `🆔: ${expense.get('id')}, 💵 Monto: ${formatCurrency(
-          expense.get('amount'),
+        return `🆔: ${expense.id}, 💵 Monto: ${formatCurrency(
+          expense.amount,
         )}, 💰 Valor con TC: ${formatCurrency(
-          expense.get('credit_total_value'),
-        )}, 📆 Fecha: ${newDt}, 🏷️ Categoría: ${expense.get('category')}`;
+          expense.credit_total_value,
+        )}, 📆 Fecha: ${newDt}, 🏷️ Categoría: ${expense.category}`;
       });
       const total = calculateTotal(
-        userExpenses.map((expense) => expense.get('amount')),
+        userExpenses.map((expense) =>
+          expense.credit_total_value
+            ? expense.credit_total_value
+            : expense.amount,
+        ),
       );
 
       ctx.reply(
@@ -47,7 +52,15 @@ class ExpenseHandler {
 
   static async getExpensesByUserId(userId) {
     const expenses = await findExpensesByUserId(userId);
-    return expenses;
+    const totalValue = calculateTotal(
+      expenses.map((expense) =>
+        expense.credit_total_value
+          ? expense.credit_total_value
+          : expense.amount,
+      ),
+    );
+    console.log(`Total expenses value for user ${userId}: ${totalValue}`);
+    return { expenses, totalValue };
   }
 }
 

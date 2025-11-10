@@ -8,12 +8,10 @@ class ExpensesController {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const expenses = await ExpenseHandler.getExpensesByUserId(userId);
-
-    const totalValue = expenses.reduce(
-      (sum, expense) => sum + expense.amount,
-      0,
+    const { expenses, totalValue } = await ExpenseHandler.getExpensesByUserId(
+      userId,
     );
+
     console.log(`Total expenses value for user ${userId}: ${totalValue}`);
 
     if (!expenses || expenses.length === 0) {
