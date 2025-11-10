@@ -21,7 +21,7 @@ bot.start((ctx) => {
 });
 
 bot.help((ctx) => {
-  ctx.reply('[Documentación completa](http://localhost:3050)', {
+  ctx.reply('Comandos básicos:\n/start\n/help\n\n [Documentación completa](https://gastos.juanvidev.com/)', {
     parse_mode: 'MarkdownV2',
   });
 });
