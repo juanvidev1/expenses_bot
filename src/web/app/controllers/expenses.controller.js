@@ -10,13 +10,19 @@ class ExpensesController {
 
     const expenses = await ExpenseHandler.getExpensesByUserId(userId);
 
+    const totalValue = expenses.reduce(
+      (sum, expense) => sum + expense.amount,
+      0,
+    );
+    console.log(`Total expenses value for user ${userId}: ${totalValue}`);
+
     if (!expenses || expenses.length === 0) {
       return res
         .status(404)
         .json({ message: 'No expenses found for this user' });
     }
 
-    return res.status(200).json({ expenses });
+    return res.status(200).json({ expenses, totalValue });
   }
 }
 
