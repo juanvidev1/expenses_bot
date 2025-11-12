@@ -23,7 +23,7 @@ export const CardModel = sequelize.define('Card', {
   card_type: {
     type: DataTypes.STRING,
     allowNull: false,
-    enum: ['debit', 'credit', 'débito', 'crédito'],
+    enum: ['debit', 'credit', 'débito', 'crédito', 'otro', 'other'],
   },
   card_brand: {
     type: DataTypes.STRING,

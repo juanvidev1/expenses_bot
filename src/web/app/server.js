@@ -4,10 +4,14 @@ import { router } from './routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3050;
-const isLinux = process.env.IS_LINUX === true || process.env.IS_LINUX === 'true' ? true : false;
+const isLinux =
+  process.env.IS_LINUX === true || process.env.IS_LINUX === 'true'
+    ? true
+    : false;
 
 // Ruta absoluta hardcodeada para evitar problemas
-const publicPath = '/home/juanvidev/expenses_bot/src/web/public';
+const publicPath =
+  process.env.DEV_URL || '/home/juanvidev/expenses_bot/src/web/public';
 
 console.log('Usando publicPath:', publicPath);
 

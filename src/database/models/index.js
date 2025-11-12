@@ -1,7 +1,6 @@
 import { CardModel } from './Card.js';
 import { ExpenseModel } from './Expense.js';
 import { UserModel } from './User.js';
-
 // Relación User -> Expense
 UserModel.hasMany(ExpenseModel, { foreignKey: 'userId', as: 'expenses' });
 ExpenseModel.belongsTo(UserModel, { foreignKey: 'userId', as: 'user' });

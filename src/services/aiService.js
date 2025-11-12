@@ -90,6 +90,63 @@ export const getInvoiceAIData = async (model, prompt, imageLink) => {
   }
 };
 
+export const getTextAIData = async (model, prompt) => {
+  if (!process.env.OPEN_ROUTER_TOKEN) {
+    throw new Error('OPEN_ROUTER_TOKEN is not defined in the environment.');
+  }
+
+  if (!model) {
+    model = 'mistralai/mistral-small-3.1-24b-instruct:free'; // Modelo con capacidad de visión
+  }
+
+  console.log('Model:', model);
+  console.log('Valid token:', !!process.env.OPEN_ROUTER_TOKEN);
+
+  try {
+    const headers = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.OPEN_ROUTER_TOKEN}`,
+      'HTTP-Referer': 'http://localhost:3050',
+      'X-Title': 'Expenses Bot',
+    };
+
+    const body = JSON.stringify({
+      model: model,
+      messages: [
+        {
+          role: 'system',
+          content: 'Eres un analizador de extractos bancarios',
+        },
+        {
+          role: 'user',
+          content: [{ type: 'text', text: prompt }],
+        },
+      ],
+      context: 'Siempre responde utilizando estructura JSON',
+    });
+
+    console.log('Request body:', body, headers);
+
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: headers,
+      body: body,
+    });
+
+    console.log('Response status:', res.status, res.statusText);
+
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error('Error getting AI data:', error.message);
+    throw error;
+  }
+};
+
 // Función para verificar modelos disponibles y límites de cuenta
 export const checkOpenRouterAccount = async () => {
   try {

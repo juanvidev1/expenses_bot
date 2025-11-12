@@ -3,11 +3,14 @@ import { registerBotCommands } from './bot/commands/botCommands.js';
 import { connectToDatabase, sequelize } from './database/config/database.js';
 import { UserHandler } from './bot/handlers/userHandler.js';
 import { startWebServer } from './web/app/server.js';
-import { addExpense } from './bot/flows/addExpenseFlow.js';
+import { addExpense, addExpenseFormFlow } from './bot/flows/addExpenseFlow.js';
 import { ExpenseHandler } from './bot/handlers/expenseHandler.js';
 import { addCardFlow } from './bot/flows/addCardFlow.js';
 import { CardHandler } from './bot/handlers/cardHandler.js';
-import { invoiceImgDataFlow } from './bot/flows/invoiceImgDataFlow.js';
+import {
+  invoiceImgDataFlow,
+  invoicePdfDataFlow,
+} from './bot/flows/invoiceImgDataFlow.js';
 import { checkOpenRouterAccount } from './services/aiService.js';
 import './database/models/User.js';
 import dotenv from 'dotenv';
@@ -15,6 +18,20 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
+
+// Middleware para capturar TODOS los updates (debe ir primero)
+// bot.use((ctx, next) => {
+//   console.log('=== UPDATE RECIBIDO ===');
+//   console.log('Tipo de update:', Object.keys(ctx.update));
+//   console.log('Update completo:', JSON.stringify(ctx.update, null, 2));
+
+//   if (ctx.update.message && ctx.update.message.web_app_data) {
+//     console.log('WEB APP DATA ENCONTRADO EN MESSAGE!');
+//     console.log('Web App Data:', ctx.update.message.web_app_data);
+//   }
+
+//   return next();
+// });
 
 bot.start((ctx) => {
   ctx.reply(
@@ -36,6 +53,37 @@ registerBotCommands('hello', (ctx) => {
   ctx.reply(message);
 });
 
+registerBotCommands('prueba_web', async (ctx) => {
+  await ctx.reply('Haz clic en el botón para abrir el formulario:', {
+    reply_markup: {
+      keyboard: [
+        [
+          {
+            text: '📝 Abrir Formulario',
+            web_app: {
+              url: 'https://cb2c62086615.ngrok-free.app/testForm.html',
+            },
+          },
+        ],
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: false,
+    },
+  });
+});
+
+registerBotCommands('add_expense', async (ctx) => {
+  // await ctx.reply('Iniciando flujo para agregar gasto...');
+  addExpenseFormFlow(ctx);
+});
+
+registerBotCommands('check_models', async (ctx) => {
+  const data = await checkOpenRouterAccount();
+  ctx.reply(
+    'Revisa la consola para ver los modelos disponibles y límites de cuenta.',
+  );
+});
+
 registerBotCommands('check_models', async (ctx) => {
   const data = await checkOpenRouterAccount();
   ctx.reply(
@@ -45,6 +93,10 @@ registerBotCommands('check_models', async (ctx) => {
 
 registerBotCommands('procesar_factura', (ctx) => {
   invoiceImgDataFlow(ctx);
+});
+
+registerBotCommands('procesar_factura_pdf', (ctx) => {
+  invoicePdfDataFlow(ctx);
 });
 
 registerBotCommands('registrarse', async (ctx) => {
