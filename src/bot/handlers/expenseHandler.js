@@ -15,14 +15,13 @@ class ExpenseHandler {
     // console.log('userExpenses:', userExpenses);
     if (userExpenses.length > 0) {
       const expensesList = userExpenses.map((expense) => {
-        const formattedDate = expense.date
-          ? expense.date.toLocaleDateString()
-          : 'N/A';
         let newDt = new Date(expense.date);
         newDt = `${
-          newDt.getDate() > 10 ? newDt.getDate() : '0' + newDt.getDate()
+          newDt.getDate() >= 10
+            ? newDt.getDate() + 1
+            : '0' + (newDt.getDate() + 1)
         }/${
-          newDt.getMonth() + 1 > 10
+          newDt.getMonth() + 1 >= 10
             ? newDt.getMonth() + 1
             : '0' + (newDt.getMonth() + 1)
         }/${newDt.getFullYear()}`;

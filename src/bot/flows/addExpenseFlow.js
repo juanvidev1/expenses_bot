@@ -311,4 +311,128 @@ const addExpense = async (ctx) => {
   });
 };
 
+export const addExpenseFormFlow = async (ctx) => {
+  // Obtener las tarjetas del usuario
+  console.log(`Obteniendo tarjetas para el usuario: ${ctx.from.id}`);
+  const userCards = await CardHandler.getUserCards(ctx.from.id);
+
+  // Crear la URL con los datos necesarios
+  const baseUrl = 'https://cb2c62086615.ngrok-free.app/registerExpense.html';
+  const params = new URLSearchParams({
+    userId: ctx.from.id,
+    cards: JSON.stringify(
+      userCards.map((card) => ({
+        id: card.id,
+        card_number: card.card_number,
+        card_type: card.card_type,
+        card_brand: card.card_brand,
+      })),
+    ),
+  });
+
+  const webAppUrl = `${baseUrl}?${params.toString()}`;
+
+  ctx.reply('Haz clic en el botón para abrir el formulario:', {
+    reply_markup: {
+      keyboard: [
+        [
+          {
+            text: '📝 Abrir Formulario',
+            web_app: {
+              url: webAppUrl,
+            },
+          },
+          {
+            text: '❌ Cancelar',
+          },
+        ],
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: false,
+    },
+  });
+
+  // Handler cancelar
+  bot.hears('❌ Cancelar', async (ctx) => {
+    await ctx.reply('Operación cancelada.', Markup.removeKeyboard());
+  });
+
+  // Handler para datos de Web App
+  bot.on('web_app_data', async (ctx) => {
+    try {
+      console.log('=== WEB APP DATA RECIBIDO ===');
+      console.log('Objeto webAppData completo:', ctx.webAppData);
+
+      // Llamar al método json() para obtener los datos
+      const expenseData = await ctx.webAppData.data.json();
+      console.log('Datos parseados con json():', expenseData);
+
+      const formattedDateInit = new Date(expenseData.fechaCompra) || new Date();
+      const formattedDate = `${
+        formattedDateInit.getDate() < 10
+          ? '0' + formattedDateInit.getDate()
+          : formattedDateInit.getDate()
+      }/${
+        formattedDateInit.getMonth() + 1 > 10
+          ? formattedDateInit.getMonth() + 1
+          : '0' + (formattedDateInit.getMonth() + 1)
+      }/${formattedDateInit.getFullYear()}`;
+
+      const newExpenseData = {
+        userId: ctx.from.id,
+        amount: parseFloat(expenseData.monto),
+        category: expenseData.categoria,
+        payment_method: expenseData.formaPago,
+        number_of_installments: expenseData.numeroCuotas
+          ? parseInt(expenseData.numeroCuotas)
+          : null,
+        associated_card: expenseData.tarjetaAsociada
+          ? parseInt(expenseData.tarjetaAsociada)
+          : null,
+        installment_value: expenseData.valorCuota
+          ? parseFloat(expenseData.valorCuota)
+          : null,
+        credit_total_value: expenseData.valorTotalCredito
+          ? parseFloat(expenseData.valorTotalCredito)
+          : null,
+        is_paid: expenseData.estadoPago === 'Sí' ? true : false,
+        description: expenseData.descripcion || null,
+        date: expenseData.fechaCompra ? formattedDateInit : new Date(),
+        market_place: expenseData.comercio || 'No especificado',
+      };
+
+      console.log('Datos del gasto a registrar desde Web App:', newExpenseData);
+
+      const registeredExpenseRes = await ExpenseHandler.addExpense(
+        newExpenseData,
+      );
+      console.log('Gasto registrado:', registeredExpenseRes.dataValues);
+      const registeredExpense = registeredExpenseRes.dataValues;
+      if (registeredExpense) {
+        await ctx.reply(
+          `✅ Gasto registrado correctamente:\n🏢 Comercio: ${registeredExpense.market_place}\n💰 Monto: $${registeredExpense.amount}\n🏷️ Categoría: ${registeredExpense.category}\n📅 Fecha: ${formattedDate}`,
+          Markup.removeKeyboard(),
+        );
+      }
+    } catch (error) {
+      console.error('Error procesando Web App data:', error);
+
+      // Si json() falla, intentar con text()
+      try {
+        const dataString = ctx.webAppData.data.text();
+        console.log('Datos como string:', dataString);
+        const expenseData = JSON.parse(dataString);
+
+        await ctx.reply(
+          `✅ Gasto registrado correctamente:\n🏢 Comercio: ${expenseData.comercio}\n💰 Monto: $${expenseData.monto}`,
+          Markup.removeKeyboard(),
+        );
+      } catch (secondError) {
+        console.error('Error con text() también:', secondError);
+        await ctx.reply(`❌ Error al procesar los datos: ${error.message}`);
+      }
+    }
+  });
+};
+
 export { addExpense };

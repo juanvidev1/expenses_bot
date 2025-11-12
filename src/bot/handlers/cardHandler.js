@@ -19,16 +19,21 @@ class CardHandler {
       });
 
       ctx.reply(`💳 Tus tarjetas:\n${cardsList.join('\n')}`);
-      return userCards.map(card => ({
+      return userCards.map((card) => ({
         id: card.get('id'),
         card_number: card.get('card_number'),
         card_type: card.get('card_type'),
-        card_brand: card.get('card_brand')
+        card_brand: card.get('card_brand'),
       }));
     } else {
       ctx.reply('📋 No tienes tarjetas registradas.');
       return [];
     }
+  }
+
+  static async getUserCards(userId) {
+    const userCards = await CardService.getCardsByUserId(userId);
+    return userCards;
   }
 
   static async getCardById(cardId) {

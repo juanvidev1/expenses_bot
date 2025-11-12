@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formulario de Gasto</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="css/formStyles.css" />
+  </head>
+  <body>
+    <h1>Registrar gasto</h1>
+    <div
+      id="debug"
+      style="
+        background: #f0f0f0;
+        padding: 10px;
+        margin: 10px 0;
+        font-size: 12px;
+        max-width: 300px;
+        display: none;
+      "
+    >
+      Debug: Cargando...
+    </div>
+    <form id="expense-form" method="POST">
+      <!-- Información básica -->
+      <div class="form-section">
+        <h3>Información del gasto</h3>
+        <input id="monto" placeholder="Monto" type="number" step="0.01" />
+        <select name="categoria" id="categoria">
+          <option value="">Seleccionar categoría</option>
+          <option value="Comida">Comida</option>
+          <option value="Transporte">Transporte</option>
+          <option value="Entretenimiento">Entretenimiento</option>
+          <option value="Salud">Salud</option>
+          <option value="Educación">Educación</option>
+          <option value="Ropa">Ropa</option>
+          <option value="Otros">Otros</option>
+        </select>
+        <input id="descripcion" placeholder="Descripción (opcional)" />
+        <input id="comercio" placeholder="Comercio o lugar (opcional)" />
+      </div>
+
+      <!-- Método de pago -->
+      <div class="form-section">
+        <h3>Método de pago</h3>
+        <select name="forma-pago" id="forma-pago">
+          <option value="Efectivo">Efectivo</option>
+          <option value="Tarjeta de crédito">Tarjeta de crédito</option>
+          <option value="Tarjeta de débito">Tarjeta de débito</option>
+          <option value="Transferencia bancaria">Transferencia bancaria</option>
+          <option value="Otros">Otros</option>
+        </select>
+
+        <select name="cards" id="cards" class="hidden">
+          <option value="">Seleccionar tarjeta</option>
+        </select>
+
+        <input
+          id="numero-cuotas"
+          placeholder="Número de cuotas"
+          type="number"
+          class="hidden"
+        />
+        <input
+          id="valor-cuota"
+          name="valor-cuota"
+          type="number"
+          step="0.01"
+          placeholder="Valor por cuota"
+          class="hidden"
+          readonly
+        />
+        <input
+          id="valor-compra-credito"
+          name="valor-compra-credito"
+          type="number"
+          step="0.01"
+          placeholder="Valor total con interés"
+          class="hidden"
+          readonly
+        />
+      </div>
+
+      <!-- Estado y fecha -->
+      <div class="form-section">
+        <h3>Estado y fecha</h3>
+        <div class="form-row">
+          <div class="form-col">
+            <label for="fecha">Fecha de compra</label>
+            <input id="fecha" type="date" />
+          </div>
+          <div class="form-col">
+            <label class="payment_status" for="estado-pago">
+              <input type="checkbox" id="estado-pago" />
+              <div class="toggle-switch"></div>
+              <p>Pago completo</p>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <button id="button" type="submit">Registrar gasto</button>
+    </form>
+
+    <script src="./js/app.js" type="module"></script>
+  </body>
+</html>

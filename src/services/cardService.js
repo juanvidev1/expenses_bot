@@ -36,6 +36,16 @@ export class CardService {
     }
   }
 
+  static async getCardByNumber(card_number) {
+    try {
+      const card = await CardModel.findOne({ where: { card_number } });
+      return card;
+    } catch (error) {
+      console.error('Error fetching card by number:', error);
+      throw error;
+    }
+  }
+
   static async updateCard(id, card) {
     try {
       const updatedCard = await CardModel.findByIdAndUpdate(id, card, {
