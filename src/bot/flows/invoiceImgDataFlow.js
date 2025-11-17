@@ -5,6 +5,10 @@ import { createExpense } from '#src/services/expenseService.js';
 import fs from 'fs';
 import { PDFParse } from 'pdf-parse';
 import { CardService } from '#src/services/cardService.js';
+import { Logger } from '../../logger/index.js';
+
+const invoiceImgLogger = new Logger('invoiceImgDataFlow.log');
+const invoiceErrorLogger = new Logger('nvoiceImgErrors.log');
 
 const processPdfBuffer = async (fileUrl) => {
   try {
@@ -71,9 +75,9 @@ export function invoiceImgDataFlow(ctx) {
         ctx.reply(
           '✅ La factura ha sido procesada y el gasto registrado correctamente.',
         );
-        console.log('Gasto registrado:', expenseData);
+        invoiceImgLogger.log('Gasto registrado:', expenseData);
       } catch (error) {
-        console.error('Error procesando la factura:', error);
+        invoiceErrorLogger.log('Error procesando la factura:', error);
         ctx.reply('Lo siento, ocurrió un error al procesar la factura.');
       }
     });
@@ -176,7 +180,7 @@ export const invoicePdfDataFlow = (ctx) => {
           cardId = card.id;
         }
 
-        console.log('Card ID to associate expenses:', cardId);
+        invoiceImgLogger.log('Card ID to associate expenses:', cardId);
         // Aquí puedes agregar la lógica para procesar la imagen de la factura
         const expenses = parsedData.gastos || [];
         for (const gasto of expenses) {
@@ -199,7 +203,7 @@ export const invoicePdfDataFlow = (ctx) => {
         );
         // console.log('Gasto registrado:', expenseData);
       } catch (error) {
-        console.error('Error procesando la factura:', error);
+        invoiceErrorLogger.log('Error procesando la factura:', error);
         ctx.reply('Lo siento, ocurrió un error al procesar la factura.');
       }
     });
